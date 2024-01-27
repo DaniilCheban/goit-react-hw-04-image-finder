@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import Searchbar from './Searchbar';
 import ImageGallery from './ImageGallery';
 import Button from './Button';
@@ -6,100 +6,81 @@ import Loader from './Loader';
 import Modal from './Modal';
 import { fetchGalleryItems } from './API';
 
-class App extends Component {
-  state = {
-    images: [],
-    page: 1,
-    loading: false,
-    selectedImage: null,
-  };
+const App = () => {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  handleSearchSubmit = query => {
+  const handleSearchSubmit = query => {
     if (query.trim() === '') {
       return;
     }
 
-    this.setState({
-      images: [],
-      page: 1,
-      searchQuery: query,
-    });
+    setImages([]);
+    setPage(1);
+    setSearchQuery(query);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
-  handleImageClick = imageUrl => {
-    this.setState({ selectedImage: imageUrl });
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  componentDidUpdate(prevProps, prevState) {
-    if (
-      this.state.page !== prevState.page ||
-      this.state.searchQuery !== prevState.searchQuery
-    ) {
-      this.fetchImages();
-    }
-  }
+  const handleImageClick = imageUrl => {
+    setSelectedImage(imageUrl);
+  };
 
-  fetchImages = () => {
-    if (this.state.searchQuery === '') {
-      this.setState({ loading: false });
-      return;
+  useEffect(() => {
+    if (page === 1) {
+      setImages([]);
     }
 
-    const { page, searchQuery } = this.state;
+    const fetchData = async () => {
+      try {
+        const response = await fetchGalleryItems(searchQuery, page);
+        const { hits } = response.data;
 
-    fetchGalleryItems(searchQuery, page)
-      .then(response => {
-        const { hits, totalHits } = response.data;
-
-        this.setState(prev => ({
-          images: [...prev.images, ...hits],
-          loadMore: page < Math.ceil(totalHits / 12),
-        }));
-      })
-      .catch(error => {
+        setImages(prev => [...prev, ...hits]);
+        setLoading(false);
+      } catch (error) {
         console.error('Error fetching images:', error);
-      })
-      .finally(() => this.setState({ loading: false }));
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [page, searchQuery]);
+
+  const handleCloseModal = () => {
+    setSelectedImage(null);
   };
 
-  handleCloseModal = () => {
-    this.setState({ selectedImage: null });
-  };
-
-  handleModalClick = e => {
+  const handleModalClick = e => {
     if (e.target === e.currentTarget) {
-      this.handleCloseModal();
+      handleCloseModal();
     }
   };
 
-  render() {
-    const { images, loading, selectedImage } = this.state;
-
-    return (
-      <div>
-        <Searchbar onSubmit={this.handleSearchSubmit} />
-        <ImageGallery
-          images={images}
-          onImageClick={this.handleImageClick}
-          loading={loading}
+  return (
+    <div>
+      <Searchbar onSubmit={handleSearchSubmit} />
+      <ImageGallery
+        images={images}
+        onImageClick={handleImageClick}
+        loading={loading}
+      />
+      {loading && <Loader />}
+      {images.length > 0 && !loading && <Button onClick={handleLoadMore} />}
+      {selectedImage && (
+        <Modal
+          imageUrl={selectedImage}
+          onClose={handleCloseModal}
+          onClick={handleModalClick}
         />
-        {loading && <Loader />}
-        {images.length > 0 && !loading && (
-          <Button onClick={this.handleLoadMore} />
-        )}
-        {selectedImage && (
-          <Modal
-            imageUrl={selectedImage}
-            onClose={this.handleCloseModal}
-            onClick={this.handleModalClick}
-          />
-        )}
-      </div>
-    );
-  }
-}
+      )}
+    </div>
+  );
+};
 
 export { App };
