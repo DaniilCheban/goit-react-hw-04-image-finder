@@ -64,7 +64,6 @@ const App = () => {
         loading={loading}
       />
       {loading && <Loader />}
-      {images.length > 0 && !loading && <Button onClick={handleLoadMore} />}
       {selectedImage && (
         <Modal imageUrl={selectedImage} onClose={handleCloseModal} />
       )}
