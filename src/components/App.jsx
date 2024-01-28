@@ -12,6 +12,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [loadMore, setLoadMore] = useState(false);
 
   const handleSearchSubmit = query => {
     if (query.trim() === '') {
@@ -32,34 +33,26 @@ const App = () => {
   };
 
   useEffect(() => {
-    if (page === 1) {
-      setImages([]);
-    }
-
     const fetchData = async () => {
       try {
         const response = await fetchGalleryItems(searchQuery, page);
-        const { hits } = response.data;
+        const { hits, totalHits } = response.data;
 
         setImages(prev => [...prev, ...hits]);
+        setLoadMore(page < Math.ceil(totalHits / 12));
         setLoading(false);
       } catch (error) {
         console.error('Error fetching images:', error);
         setLoading(false);
       }
     };
-
-    fetchData();
+    if (searchQuery) {
+      fetchData();
+    }
   }, [page, searchQuery]);
 
   const handleCloseModal = () => {
     setSelectedImage(null);
-  };
-
-  const handleModalClick = e => {
-    if (e.target === e.currentTarget) {
-      handleCloseModal();
-    }
   };
 
   return (
@@ -73,11 +66,10 @@ const App = () => {
       {loading && <Loader />}
       {images.length > 0 && !loading && <Button onClick={handleLoadMore} />}
       {selectedImage && (
-        <Modal
-          imageUrl={selectedImage}
-          onClose={handleCloseModal}
-          onClick={handleModalClick}
-        />
+        <Modal imageUrl={selectedImage} onClose={handleCloseModal} />
+      )}
+      {loadMore && images.length > 0 && !loading && (
+        <Button onClick={handleLoadMore} />
       )}
     </div>
   );
