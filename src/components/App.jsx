@@ -12,7 +12,7 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loadMore, setLoadMore] = useState(false);
+  const [loadMoree, setLoadMore] = useState(false);
 
   const handleSearchSubmit = query => {
     if (query.trim() === '') {
@@ -68,7 +68,7 @@ const App = () => {
       {selectedImage && (
         <Modal imageUrl={selectedImage} onClose={handleCloseModal} />
       )}
-      {loadMore && images.length > 0 && !loading && (
+      {loadMoree && images.length > 0 && !loading && (
         <Button onClick={handleLoadMore} />
       )}
     </div>
