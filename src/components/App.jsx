@@ -67,9 +67,7 @@ const App = () => {
       {selectedImage && (
         <Modal imageUrl={selectedImage} onClose={handleCloseModal} />
       )}
-      {loadMoree && images.length > 0 && !loading && (
-        <Button onClick={handleLoadMore} />
-      )}
+      {loadMoree && <Button onClick={handleLoadMore} />}
     </div>
   );
 };
